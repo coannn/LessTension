@@ -1,0 +1,33 @@
+from django.http import JsonResponse
+from django.db import connection
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+import  json
+from . import db_helper
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def food_post(request):
+    try:
+        body = json.loads(request.body)
+        print(body)
+        email = body['email']
+        date = body['date']
+        food = body['food']
+        weight = body['weight']
+        calories = body['calories']
+
+        with connection.cursor() as cursor:
+            sqlQuery = "INSERT INTO [Diet] (email, Date, food, calories, weight) VALUES  (%s, %s, %s, %s, %s)"
+            data = [email, date, food, calories, weight]
+            cursor.execute(sqlQuery,data)
+            rows = db_helper.dictfetchall(cursor)
+        
+        context = {
+            'statusCode': '200',
+            'data': rows
+        }
+        return JsonResponse(context)
+    except:
+        context = {'statusCode': '500', 'Error': '500 Internal error!'}        
+        return JsonResponse(context)
